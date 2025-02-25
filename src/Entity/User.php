@@ -4,8 +4,10 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Get;
 use App\DataPersister\UserDataPersister;
 use App\Repository\UserRepository;
+use App\State\Provider\MeProvider;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -23,6 +25,12 @@ use Symfony\Component\Security\Core\User\UserInterface;
             validationContext: ['groups' => ['Default']],
             security: "is_granted('PUBLIC_ACCESS')",
             processor: UserDataPersister::class
+        ),
+        new Get(
+            uriTemplate: '/me',
+            normalizationContext: ['groups' => ['user:read']],
+            security: "is_granted('ROLE_USER')",
+            provider: MeProvider::class
         )
     ]
 )]
@@ -31,10 +39,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
-    #[Groups(['user:write'])]
+    #[Groups(['user:write', 'user:read'])]
     private ?string $email = null;
 
     /**
